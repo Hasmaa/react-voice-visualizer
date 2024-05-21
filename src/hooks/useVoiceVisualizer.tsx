@@ -19,6 +19,7 @@ function useVoiceVisualizer({
   onPausedAudioPlayback,
   onResumedAudioPlayback,
   onErrorPlayingAudio,
+  config,
 }: useVoiceVisualizerParams = {}): Controls {
   const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
   const [isPausedRecording, setIsPausedRecording] = useState(false);
@@ -51,7 +52,7 @@ function useVoiceVisualizer({
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const isAvailableRecordedAudio = Boolean(
-    bufferFromRecordedBlob && !isProcessingAudioOnComplete,
+    bufferFromRecordedBlob && !isProcessingAudioOnComplete
   );
   const formattedDuration = formatDurationTime(duration);
   const formattedRecordingTime = formatRecordingTime(recordingTime);
@@ -127,7 +128,7 @@ function useVoiceVisualizer({
       setError(
         error instanceof Error
           ? error
-          : new Error("Error processing the audio blob"),
+          : new Error("Error processing the audio blob")
       );
     }
   };
@@ -146,7 +147,7 @@ function useVoiceVisualizer({
         audioContextRef.current = new window.AudioContext();
         analyserRef.current = audioContextRef.current.createAnalyser();
         dataArrayRef.current = new Uint8Array(
-          analyserRef.current.frequencyBinCount,
+          analyserRef.current.frequencyBinCount
         );
         sourceRef.current =
           audioContextRef.current.createMediaStreamSource(stream);
@@ -154,9 +155,9 @@ function useVoiceVisualizer({
         mediaRecorderRef.current = new MediaRecorder(stream);
         mediaRecorderRef.current.addEventListener(
           "dataavailable",
-          handleDataAvailable,
+          handleDataAvailable
         );
-        mediaRecorderRef.current.start();
+        mediaRecorderRef.current.start(config?.timeslice ?? undefined);
         if (onStartRecording) onStartRecording();
 
         recordingFrame();
@@ -166,7 +167,7 @@ function useVoiceVisualizer({
         setError(
           error instanceof Error
             ? error
-            : new Error("Error starting audio recording"),
+            : new Error("Error starting audio recording")
         );
       });
   };
@@ -209,7 +210,7 @@ function useVoiceVisualizer({
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current.removeEventListener(
         "dataavailable",
-        handleDataAvailable,
+        handleDataAvailable
       );
     }
     audioStream?.getTracks().forEach((track) => track.stop());
@@ -236,7 +237,7 @@ function useVoiceVisualizer({
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.removeEventListener(
         "dataavailable",
-        handleDataAvailable,
+        handleDataAvailable
       );
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current = null;
@@ -282,7 +283,7 @@ function useVoiceVisualizer({
           console.error(error);
           if (onErrorPlayingAudio) {
             onErrorPlayingAudio(
-              error instanceof Error ? error : new Error("Error playing audio"),
+              error instanceof Error ? error : new Error("Error playing audio")
             );
           }
         });
@@ -353,7 +354,7 @@ function useVoiceVisualizer({
     const downloadAnchor = document.createElement("a");
     downloadAnchor.href = audioSrc;
     downloadAnchor.download = `recorded_audio${getFileExtensionFromMimeType(
-      mediaRecorderRef.current?.mimeType,
+      mediaRecorderRef.current?.mimeType
     )}`;
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
