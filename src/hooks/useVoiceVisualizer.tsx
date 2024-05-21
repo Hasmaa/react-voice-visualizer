@@ -157,7 +157,7 @@ function useVoiceVisualizer({
           "dataavailable",
           handleDataAvailable
         );
-        mediaRecorderRef.current.addEventListener("stop", handleStop); // Add stop event listener
+        mediaRecorderRef.current.addEventListener("stop", handleBlobChunks); // Add stop event listener
         mediaRecorderRef.current.start(config?.timeslice ?? undefined);
         if (onStartRecording) onStartRecording();
 
@@ -180,13 +180,10 @@ function useVoiceVisualizer({
   };
 
   const handleDataAvailable = (event: BlobEvent) => {
-    console.log("event.data", event.data);
-    console.log(blobChunks);
-    setBlobChunks((prevChunks) => [...prevChunks, event.data]); // Store each chunk
-  };
-
-  const handleStop = () => {
-    handleBlobChunks();
+    setBlobChunks((prevChunks) => {
+      console.log(prevChunks);
+      return [...prevChunks, event.data];
+    });
   };
 
   const handleTimeUpdate = () => {
