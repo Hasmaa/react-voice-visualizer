@@ -200,7 +200,7 @@ function useVoiceVisualizer({
     getUserMedia();
   };
 
-  const stopRecording = () => {
+  const stopRecording = async () => {
     if (!isRecordingInProgress) return;
 
     setIsRecordingInProgress(false);
@@ -215,18 +215,21 @@ function useVoiceVisualizer({
     if (rafRecordingRef.current) cancelAnimationFrame(rafRecordingRef.current);
     if (sourceRef.current) sourceRef.current.disconnect();
     if (audioContextRef.current && audioContextRef.current.state !== "closed") {
-      void audioContextRef.current.close();
+      await audioContextRef.current.close();
     }
     _setIsProcessingAudioOnComplete(true);
     setRecordingTime(0);
     setIsPausedRecording(false);
     if (onStopRecording) onStopRecording();
-
-    // Combine all blob chunks
-    const combinedBlob = new Blob(blobChunks, { type: "audio/webm" });
-    setRecordedBlob(combinedBlob);
-    void processBlob(combinedBlob);
-    setBlobChunks([]); // Clear the chunks
+    setTimeout(() => {
+      // Combine all blob chunks
+      const combinedBlob = new Blob(blobChunks, {
+        type: blobChunks[0]?.type || "audio/webm",
+      });
+      setRecordedBlob(combinedBlob);
+      void processBlob(combinedBlob);
+      setBlobChunks([]); // Clear the chunks
+    }, 1000);
   };
 
   const clearCanvas = () => {
