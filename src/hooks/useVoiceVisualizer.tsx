@@ -179,12 +179,16 @@ function useVoiceVisualizer({
   };
 
   const handleDataAvailable = (event: BlobEvent) => {
-    if (!mediaRecorderRef.current) return;
-
-    mediaRecorderRef.current = null;
-    audioRef.current = new Audio();
-    setRecordedBlob(event.data);
-    void processBlob(event.data);
+    if (event.data && event.data.size > 0) {
+      setRecordedBlob((prevBlob) => {
+        // Combine previous blob with the new data chunk
+        const newBlob = prevBlob
+          ? new Blob([prevBlob, event.data], { type: event.data.type })
+          : event.data;
+        void processBlob(newBlob);
+        return newBlob;
+      });
+    }
   };
 
   const handleTimeUpdate = () => {
