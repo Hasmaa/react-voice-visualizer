@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   formatDurationTime,
@@ -200,7 +200,7 @@ function useVoiceVisualizer({
     getUserMedia();
   };
 
-  const stopRecording = async () => {
+  const stopRecording = useCallback(() => {
     if (!isRecordingInProgress) return;
 
     setIsRecordingInProgress(false);
@@ -215,22 +215,19 @@ function useVoiceVisualizer({
     if (rafRecordingRef.current) cancelAnimationFrame(rafRecordingRef.current);
     if (sourceRef.current) sourceRef.current.disconnect();
     if (audioContextRef.current && audioContextRef.current.state !== "closed") {
-      await audioContextRef.current.close();
+      void audioContextRef.current.close();
     }
     _setIsProcessingAudioOnComplete(true);
     setRecordingTime(0);
     setIsPausedRecording(false);
     if (onStopRecording) onStopRecording();
-    setTimeout(() => {
-      // Combine all blob chunks
-      const combinedBlob = new Blob(blobChunks, {
-        type: blobChunks[0]?.type || "audio/webm",
-      });
-      setRecordedBlob(combinedBlob);
-      void processBlob(combinedBlob);
-      setBlobChunks([]); // Clear the chunks
-    }, 1000);
-  };
+    const combinedBlob = new Blob(blobChunks, {
+      type: blobChunks[0]?.type || "audio/webm",
+    });
+    setRecordedBlob(combinedBlob);
+    void processBlob(combinedBlob);
+    setBlobChunks([]);
+  }, [audioStream, blobChunks, isRecordingInProgress, onStopRecording]);
 
   const clearCanvas = () => {
     if (rafRecordingRef.current) {
