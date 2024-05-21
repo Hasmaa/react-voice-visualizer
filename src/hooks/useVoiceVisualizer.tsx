@@ -41,6 +41,7 @@ function useVoiceVisualizer({
   const [error, setError] = useState<Error | null>(null);
   const [isProcessingStartRecording, setIsProcessingStartRecording] =
     useState(false);
+  const [blobChunks, setBlobChunks] = useState<Blob[]>([]); // New state for storing blob chunks
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -180,14 +181,7 @@ function useVoiceVisualizer({
 
   const handleDataAvailable = (event: BlobEvent) => {
     if (event.data && event.data.size > 0) {
-      setRecordedBlob((prevBlob) => {
-        // Combine previous blob with the new data chunk
-        const newBlob = prevBlob
-          ? new Blob([prevBlob, event.data], { type: event.data.type })
-          : event.data;
-        void processBlob(newBlob);
-        return newBlob;
-      });
+      setBlobChunks((prevChunks) => [...prevChunks, event.data]); // Store each chunk
     }
   };
 
@@ -227,6 +221,12 @@ function useVoiceVisualizer({
     setRecordingTime(0);
     setIsPausedRecording(false);
     if (onStopRecording) onStopRecording();
+
+    // Combine all blob chunks
+    const combinedBlob = new Blob(blobChunks, { type: "audio/webm" });
+    setRecordedBlob(combinedBlob);
+    void processBlob(combinedBlob);
+    setBlobChunks([]); // Clear the chunks
   };
 
   const clearCanvas = () => {
@@ -276,6 +276,7 @@ function useVoiceVisualizer({
     setAudioData(new Uint8Array(0));
     setError(null);
     setIsCleared(true);
+    setBlobChunks([]); // Clear the chunks
     if (onClearCanvas) onClearCanvas();
   };
 
