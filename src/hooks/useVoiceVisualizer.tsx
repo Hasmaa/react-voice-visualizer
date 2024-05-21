@@ -205,6 +205,7 @@ function useVoiceVisualizer({
 
     setIsRecordingInProgress(false);
     if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.requestData();
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current.removeEventListener(
         "dataavailable",
