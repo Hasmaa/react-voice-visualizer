@@ -180,9 +180,9 @@ function useVoiceVisualizer({
   };
 
   const handleDataAvailable = (event: BlobEvent) => {
-    if (event.data && event.data.size > 0) {
-      setBlobChunks((prevChunks) => [...prevChunks, event.data]); // Store each chunk
-    }
+    console.log("event.data", event.data);
+    console.log(blobChunks);
+    setBlobChunks((prevChunks) => [...prevChunks, event.data]); // Store each chunk
   };
 
   const handleTimeUpdate = () => {
@@ -200,7 +200,7 @@ function useVoiceVisualizer({
     getUserMedia();
   };
 
-  const stopRecording = useCallback(() => {
+  const stopRecording = () => {
     if (!isRecordingInProgress) return;
 
     setIsRecordingInProgress(false);
@@ -222,13 +222,17 @@ function useVoiceVisualizer({
     setRecordingTime(0);
     setIsPausedRecording(false);
     if (onStopRecording) onStopRecording();
+    handleBlobChunks();
+  };
+
+  const handleBlobChunks = useCallback(() => {
     const combinedBlob = new Blob(blobChunks, {
       type: blobChunks[0]?.type || "audio/webm",
     });
     setRecordedBlob(combinedBlob);
     void processBlob(combinedBlob);
     setBlobChunks([]);
-  }, [audioStream, blobChunks, isRecordingInProgress, onStopRecording]);
+  }, [blobChunks]);
 
   const clearCanvas = () => {
     if (rafRecordingRef.current) {
