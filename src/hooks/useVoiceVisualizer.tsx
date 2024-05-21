@@ -174,7 +174,6 @@ function useVoiceVisualizer({
           "dataavailable",
           handleDataAvailable
         );
-        mediaRecorderRef.current.addEventListener("stop", handleStop); // Add stop event listener
         mediaRecorderRef.current.start(config?.timeslice ?? undefined);
         if (onStartRecording) onStartRecording();
 
@@ -204,10 +203,6 @@ function useVoiceVisualizer({
         return [...prevChunks, event.data];
       });
     }
-  };
-
-  const handleStop = () => {
-    handleBlobChunks();
   };
 
   const handleTimeUpdate = () => {
