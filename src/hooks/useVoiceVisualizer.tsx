@@ -179,14 +179,12 @@ function useVoiceVisualizer({
     rafRecordingRef.current = requestAnimationFrame(recordingFrame);
   };
 
-  const handleDataAvailable = useCallback(
-    (event: BlobEvent) => {
-      setBlobChunks((prevChunks) => {
-        return [...prevChunks, event.data];
-      });
-    },
-    [setBlobChunks]
-  );
+  const handleDataAvailable = (event: BlobEvent) => {
+    setBlobChunks((prevChunks) => {
+      console.log(prevChunks);
+      return [...prevChunks, event.data];
+    });
+  };
 
   const handleTimeUpdate = () => {
     if (!audioRef.current) return;
