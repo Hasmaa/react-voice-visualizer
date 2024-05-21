@@ -21,6 +21,7 @@ function useVoiceVisualizer({
   config,
 }: useVoiceVisualizerParams = {}): Controls {
   const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
+  const [isRecordingStopped, setIsRecordingStopped] = useState(false);
   const [isPausedRecording, setIsPausedRecording] = useState(false);
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [audioData, setAudioData] = useState<Uint8Array>(new Uint8Array(0));
@@ -99,6 +100,22 @@ function useVoiceVisualizer({
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [isCleared]);
+
+  const handleBlobChunks = useCallback(() => {
+    const combinedBlob = new Blob(blobChunks, {
+      type: blobChunks[0]?.type || "audio/webm",
+    });
+    setRecordedBlob(combinedBlob);
+    void processBlob(combinedBlob);
+    setBlobChunks([]);
+  }, [blobChunks]);
+
+  useEffect(() => {
+    if (isRecordingStopped && blobChunks.length > 0) {
+      handleBlobChunks();
+      setIsRecordingStopped(false);
+    }
+  }, [isRecordingStopped, blobChunks, handleBlobChunks]);
 
   const handleBeforeUnload = (e: BeforeUnloadEvent) => {
     e.preventDefault();
@@ -180,9 +197,13 @@ function useVoiceVisualizer({
   };
 
   const handleDataAvailable = (event: BlobEvent) => {
-    console.log("event.data", event.data);
-    console.log(blobChunks);
-    setBlobChunks((prevChunks) => [...prevChunks, event.data]); // Store each chunk
+    console.log(event.data);
+    if (event.data.size > 0) {
+      setBlobChunks((prevChunks) => {
+        console.log("previous chunks", prevChunks);
+        return [...prevChunks, event.data];
+      });
+    }
   };
 
   const handleStop = () => {
@@ -209,11 +230,13 @@ function useVoiceVisualizer({
 
     setIsRecordingInProgress(false);
     if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.requestData();
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current.removeEventListener(
         "dataavailable",
         handleDataAvailable
       );
+      setIsRecordingStopped(true);
     }
     audioStream?.getTracks().forEach((track) => track.stop());
     if (rafRecordingRef.current) cancelAnimationFrame(rafRecordingRef.current);
@@ -226,15 +249,6 @@ function useVoiceVisualizer({
     setIsPausedRecording(false);
     if (onStopRecording) onStopRecording();
   };
-
-  const handleBlobChunks = useCallback(() => {
-    const combinedBlob = new Blob(blobChunks, {
-      type: blobChunks[0]?.type || "audio/webm",
-    });
-    setRecordedBlob(combinedBlob);
-    void processBlob(combinedBlob);
-    setBlobChunks([]);
-  }, [blobChunks]);
 
   const clearCanvas = () => {
     if (rafRecordingRef.current) {
