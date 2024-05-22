@@ -201,10 +201,8 @@ function useVoiceVisualizer({
   };
 
   const handleDataAvailable = (event: BlobEvent) => {
-    console.log(event.data);
     if (event.data.size > 0) {
       setBlobChunks((prevChunks) => {
-        console.log("previous chunks", prevChunks);
         return [...prevChunks, event.data];
       });
     }
