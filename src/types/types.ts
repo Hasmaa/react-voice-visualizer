@@ -117,6 +117,7 @@ export interface useVoiceVisualizerParams {
   onErrorPlayingAudio?: (error: Error) => void;
   config?: {
     timeslice?: number;
+    audioBitsPerSecond?: number;
   };
 }
 

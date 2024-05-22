@@ -169,7 +169,12 @@ function useVoiceVisualizer({
         sourceRef.current =
           audioContextRef.current.createMediaStreamSource(stream);
         sourceRef.current.connect(analyserRef.current);
-        mediaRecorderRef.current = new MediaRecorder(stream);
+        mediaRecorderRef.current = new MediaRecorder(
+          stream,
+          config?.audioBitsPerSecond
+            ? { audioBitsPerSecond: config.audioBitsPerSecond }
+            : {}
+        );
         mediaRecorderRef.current.addEventListener(
           "dataavailable",
           handleDataAvailable
